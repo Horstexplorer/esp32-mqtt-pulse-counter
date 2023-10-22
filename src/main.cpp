@@ -194,7 +194,6 @@ void setup() {
 }
 
 uint previous_state;
-ulong last_state_switch;
 
 uint p;
 void loop() {

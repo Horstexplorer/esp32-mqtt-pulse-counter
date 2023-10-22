@@ -7,8 +7,8 @@
 ## Configuration
 The following values need to be adjusted in main.cpp
 
-`IO_SENSOR_PIN` GPIO which the reed sensor connects to  
-`IO_RESET_PREFERENCES_PIN` GPIO used to reset internally stored counter values  
+`IO_SENSOR_PIN` GPIO which the reed sensor connects to. Default 23  
+`IO_RESET_PREFERENCES_PIN` GPIO used to reset internally stored counter values. Default 22  
 `PREFERENCES_TOTAL_PULSES_COUNT_OVERRIDE` Amount of counted pulses to be used as initial value. Default 0  
 `PREFERENCES_TOTAL_VOLUME_OVERRIDE` Amount of gas volume to be used as initial value. Default 0  
 `PREFERENCES_VOLUME_PER_IMPULSE` Amount of gas volume per pulse in m³  
@@ -19,3 +19,9 @@ The following values need to be adjusted in main.cpp
 `PUBSUB_USERNAME` MQTT username  
 `PUBSUB_PASSWORD` MQTT password  
 `PUBSUB_CLIENT_ID` MQTT client id  
+
+Optional configuration parameters
+
+`IO_SENSOR_DEBOUNCE` Time in ms used to debounce the sensor activation. Default 50  
+`PREFERENCES_TOTAL_PULSES_COUNT_TOPIC` MQTT topic used to publish the total number of counted pulses. Default `gas/total/pulses`  
+`PREFERENCES_TOTAL_VOLUME_TOPIC` MQTT topic used to publish the total amount of gas metered. Default `gas/total/volume`
