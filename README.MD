@@ -22,6 +22,17 @@ The following values need to be adjusted in main.cpp
 
 Optional configuration parameters
 
-`IO_SENSOR_DEBOUNCE` Time in ms used to debounce the sensor activation. Default 50  
-`PREFERENCES_TOTAL_PULSES_COUNT_TOPIC` MQTT topic used to publish the total number of counted pulses. Default `gas/total/pulses`  
-`PREFERENCES_TOTAL_VOLUME_TOPIC` MQTT topic used to publish the total amount of gas metered. Default `gas/total/volume`
+`IO_SENSOR_DEBOUNCE` Time in ms used to debounce the sensor activation. Default 50
+
+## Message
+Will publish a json payload including the sensor details
+```
+{
+  "device_id": "<device mac id>",       // unique esp identifier
+  "total_pulses": <long64>,             // amount of pulses counted in total
+  "initial_pulses": <long64>,           // initial number of pulses configured
+  "total_volume": <double>,             // amount of gas volume tracked
+  "initial_volume": <double>,           // initial amount of gas volume configured
+  "volume_per_pulse": <double>,         // amount of gas volume tracked per counted pulse
+}
+```

@@ -48,10 +48,8 @@ void ioInterruptDetach(const GPIO_DEBOUNCED& gpioDebounced) {
 
 #define PREFERENCES_STORAGE_SPACE "gm-readouts"
 #define PREFERENCES_TOTAL_PULSES_COUNT_KEY "total-pulses"
-#define PREFERENCES_TOTAL_PULSES_COUNT_TOPIC "gas/total/pulses"
-#define PREFERENCES_TOTAL_PULSES_COUNT_OVERRIDE 0
 #define PREFERENCES_TOTAL_VOLUME_KEY "total-volume"
-#define PREFERENCES_TOTAL_VOLUME_TOPIC "gas/total/volume"
+#define PREFERENCES_TOTAL_PULSES_COUNT_OVERRIDE 0
 #define PREFERENCES_TOTAL_VOLUME_OVERRIDE 0.0
 #define PREFERENCES_VOLUME_PER_IMPULSE 0.01
 
@@ -129,6 +127,7 @@ void wifi_client_setup_dhcp(char* wifi_ssid, char* wifi_password, bool auto_reco
 #define PUBSUB_USERNAME "gasmeter"
 #define PUBSUB_PASSWORD ""
 #define PUBSUB_CLIENT_ID "gasmeter"
+#define PUBSUB_TOPIC "gasmeter"
 
 WiFiClient wifi_client;
 PubSubClient pub_sub_client(wifi_client);
@@ -162,6 +161,29 @@ bool mqtt_publish(char* topic, char* content) {
 
     return pub_sub_client.publish(topic, content);
 }
+
+std::string get_unique_device_id() {
+    std::stringstream stringStream;
+    stringStream << std::hex << ESP.getEfuseMac();
+    return stringStream.str();
+}
+
+std::string json_sensor_payload() {
+    std::stringstream payload = std::stringstream();
+    payload << R"({"device_id":")" << get_unique_device_id()
+            << R"(","total_pulses":)" << std::to_string(preferences.getLong64(PREFERENCES_TOTAL_PULSES_COUNT_KEY))
+            << R"(,"initial_pulses":)" << std::to_string(PREFERENCES_TOTAL_PULSES_COUNT_OVERRIDE)
+            << R"(,"total_volume":)" << std::to_string(preferences.getDouble(PREFERENCES_TOTAL_VOLUME_KEY))
+            << R"(,"initial_volume":)" << std::to_string(PREFERENCES_TOTAL_VOLUME_OVERRIDE)
+            << R"(,"volume_per_pulse":)" << std::to_string(PREFERENCES_VOLUME_PER_IMPULSE)
+            << R"(})";
+    return payload.str();
+}
+
+void publish_current_state() {
+    mqtt_publish((char*) PUBSUB_TOPIC,(char*) json_sensor_payload().c_str());
+}
+
 
 //############################
 
@@ -204,11 +226,9 @@ void loop() {
         increment_preference_l64((char*) PREFERENCES_TOTAL_PULSES_COUNT_KEY, 1);
         increment_preference_d((char*) PREFERENCES_TOTAL_VOLUME_KEY, PREFERENCES_VOLUME_PER_IMPULSE);
         // send pub sub message
-        mqtt_publish((char*) PREFERENCES_TOTAL_PULSES_COUNT_TOPIC,(char*) std::to_string(preferences.getLong64(PREFERENCES_TOTAL_PULSES_COUNT_KEY)).c_str());
-        mqtt_publish((char*) PREFERENCES_TOTAL_VOLUME_TOPIC,(char*) std::to_string(preferences.getDouble(PREFERENCES_TOTAL_VOLUME_KEY)).c_str());
+        publish_current_state();
         // output
-        Serial.println(("<> Values: " + std::to_string(preferences.getLong64(PREFERENCES_TOTAL_PULSES_COUNT_KEY)) + " pulses, "
-                        + std::to_string(preferences.getDouble(PREFERENCES_TOTAL_VOLUME_KEY)) + " m3 volume").c_str());
+        Serial.println(("<> Values: " + json_sensor_payload()).c_str());
     } else if (sensor_gpio->steady_state == LOW && previous_state != LOW) {
         Serial.println("<> Impulse reset");
     }
